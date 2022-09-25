@@ -1,11 +1,13 @@
-from sys import excepthook
 from urllib.request import urlopen
 from time import sleep
-import uuid # this gives us the mac address of the machine as a 48 bit positive enteger
-# we use it to identify each zombie
+
+
+# the number of seconds to between sebsequent requests to the server to fetch a command
+INTER_REQUEST_DELAY = 2
 
 
 def get_zid_from_server():
+    print('zombie - get_id_from_server')
     """get a new zid from the server"""
     with urlopen("http://127.0.0.1:5000/getId") as httpres:
         zid = bytes.decode(httpres.read())
@@ -23,6 +25,7 @@ except FileNotFoundError:
 
 command = ""
 while True:
+    print('zombie - main loop')
     with urlopen("http://127.0.0.1:5000/getCommand/{}".format(zid)) as res:
         res = bytes.decode(res.read())
         if res == "die":
@@ -33,9 +36,9 @@ while True:
             print("assume", command, "is executed.")
             # let's send the result (a mock result) to the responder after 2 seconds.
             sleep(2)
-            with urlopen("http://127.0.0.1:5000/reportResult/{}/{}/{}".format(zid, command, "mock_response")) as http_response:
+            with urlopen("http://127.0.0.1:5000/reportResult/{}/{}/{}".format(zid, command, "mock_response").replace(" ", "%20")) as http_response:
                 print(f"status code from server upon uploading command result : {http_response.status}")
                 print("server said", bytes.decode(http_response.read()))
-    sleep(2)
+    sleep(INTER_REQUEST_DELAY)
 
 print("dying ... ")
